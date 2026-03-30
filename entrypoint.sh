@@ -4,13 +4,15 @@ set -e
 
 echo "Starting entrypoint script..."
 
-# Parse DATABASE_URL to get host and port
-DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-
-# Default to postgres:5432 if not found in DATABASE_URL
-DB_HOST=${DB_HOST:-db}
-DB_PORT=${DB_PORT:-5432}
+if [ -n "$DATABASE_URL" ]; then
+    DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:/]*\).*/\1/p')
+    DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+    DB_HOST=${DB_HOST:-localhost}
+    DB_PORT=${DB_PORT:-5432}
+else
+    DB_HOST=${PGHOST:-db}
+    DB_PORT=${PGPORT:-5432}
+fi
 
 echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
 
