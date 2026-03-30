@@ -209,3 +209,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .idea
+.env.docker
+*.bat
+*.pyc
+media/
+staticfiles/
