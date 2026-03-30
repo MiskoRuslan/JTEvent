@@ -214,3 +214,4 @@ __marimo__/
 *.pyc
 media/
 staticfiles/
+.claude
