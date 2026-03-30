@@ -4,52 +4,47 @@ set -e
 
 echo "Starting entrypoint script..."
 
+# On Railway, DATABASE_URL is provided directly
+# On local Docker, we wait for 'db' service
 if [ -n "$DATABASE_URL" ]; then
-    DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:/]*\).*/\1/p')
-    DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-    DB_HOST=${DB_HOST:-localhost}
-    DB_PORT=${DB_PORT:-5432}
+    echo "Railway environment detected, using DATABASE_URL..."
+    # Extract host using Python (more reliable than sed)
+    DB_HOST=$(python3 -c "import urllib.parse, os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.hostname)")
+    DB_PORT=$(python3 -c "import urllib.parse, os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.port or 5432)")
 else
+    echo "Local environment detected..."
     DB_HOST=${PGHOST:-db}
     DB_PORT=${PGPORT:-5432}
 fi
 
 echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
 
-# Wait for PostgreSQL to be ready
 until nc -z "$DB_HOST" "$DB_PORT"; do
-  echo "PostgreSQL is unavailable - sleeping"
-  sleep 1
+    echo "PostgreSQL is unavailable - sleeping"
+    sleep 1
 done
 
 echo "PostgreSQL is up - continuing..."
-
-# Wait a bit more to ensure PostgreSQL is fully ready
 sleep 2
 
-# Run migrations
 echo "Running database migrations..."
 python manage.py migrate --noinput
 
-# Create superuser if environment variables are set
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
-  echo "Creating superuser..."
-  python manage.py shell <<EOF
+    echo "Creating superuser..."
+    python manage.py shell <<EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
 if not User.objects.filter(username='$DJANGO_SUPERUSER_USERNAME').exists():
     User.objects.create_superuser('$DJANGO_SUPERUSER_USERNAME', '$DJANGO_SUPERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD')
-    print('Superuser created successfully')
+    print('Superuser created')
 else:
     print('Superuser already exists')
 EOF
 fi
 
-# Collect static files
 echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear || echo "Static files collection failed or skipped"
+python manage.py collectstatic --noinput --clear || echo "Static files collection skipped"
 
-echo "Entrypoint script completed. Starting application..."
-
-# Execute the main command
+echo "Entrypoint completed. Starting application..."
 exec "$@"
