@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div x-data="homePage()">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden">
+        <div class="absolute inset-0 gradient-bg opacity-10"></div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+            <div class="text-center max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    Discover <span class="gradient-text">Amazing Events</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12">
+                    Find, create, and attend events that match your interests
+                </p>
+
+                <!-- Search Bar -->
+                <div class="max-w-2xl mx-auto">
+                    <div class="glass rounded-2xl p-2 flex items-center space-x-2">
+                        <svg class="w-6 h-6 text-gray-400 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" x-model="search" @input="searchEvents"
+                               placeholder="Search events..."
+                               class="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none px-4 py-3 text-lg">
+                        <button @click="window.location.href='/events?search=' + search"
+                                class="px-6 py-3 gradient-bg text-white rounded-xl font-semibold hover:opacity-90 transition">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Pills -->
+                <div class="flex flex-wrap justify-center gap-3 mt-8">
+                    <template x-for="category in categories" :key="category.value">
+                        <a :href="'/events?category=' + category.value"
+                           class="px-6 py-2 glass rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 transition cursor-pointer"
+                           x-text="category.label">
+                        </a>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Events -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold">Upcoming Events</h2>
+            <a href="/events" class="text-primary-600 hover:text-primary-700 font-semibold flex items-center space-x-2">
+                <span>View All</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+        </div>
+
+        <div x-show="loading" class="grid md:grid-cols-3 gap-6">
+            <template x-for="i in 6" :key="i">
+                <div class="glass rounded-2xl p-6 animate-pulse">
+                    <div class="bg-gray-300 dark:bg-gray-700 h-48 rounded-xl mb-4"></div>
+                    <div class="bg-gray-300 dark:bg-gray-700 h-6 rounded mb-2"></div>
+                    <div class="bg-gray-300 dark:bg-gray-700 h-4 rounded w-2/3"></div>
+                </div>
+            </template>
+        </div>
+
+        <div x-show="!loading" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <template x-for="event in events" :key="event.id">
+                <a :href="'/events/' + event.id"
+                   class="glass rounded-2xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                    <div class="relative h-48 overflow-hidden">
+                        <img :src="event.cover_image_url"
+                             class="w-full h-full object-cover"
+                             :alt="event.title">
+                        <div class="absolute top-4 right-4">
+                            <span class="px-3 py-1 glass rounded-full text-sm font-semibold text-white"
+                                  x-text="event.category"></span>
+                        </div>
+                        <div x-show="event.is_full" class="absolute top-4 left-4">
+                            <span class="px-3 py-1 bg-red-500 rounded-full text-sm font-semibold text-white">
+                                Full
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2" x-text="event.title"></h3>
+                        <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span x-text="formatDate(event.date)"></span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span x-text="event.location"></span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span x-text="event.attendees_count + ' attending'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </template>
+        </div>
+
+        <div x-show="!loading && events.length === 0" class="text-center py-20">
+            <svg class="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <h3 class="text-xl font-semibold mb-2">No events yet</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Be the first to create an event!</p>
+            <a href="/events/create" class="inline-block px-6 py-3 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition">
+                Create Event
+            </a>
+        </div>
+    </section>
+</div>
+
+<script>
+function homePage() {
+    return {
+        search: '',
+        loading: true,
+        events: [],
+        categories: [
+            { value: 'tech', label: '💻 Tech' },
+            { value: 'business', label: '💼 Business' },
+            { value: 'music', label: '🎵 Music' },
+            { value: 'sports', label: '⚽ Sports' },
+            { value: 'arts', label: '🎨 Arts' },
+        ],
+
+        async init() {
+            await this.loadEvents();
+        },
+
+        async loadEvents() {
+            try {
+                this.loading = true;
+                const data = await api.get('/events/?ordering=-date&page_size=6');
+                this.events = data.results || data;
+            } catch (error) {
+                console.error('Failed to load events:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        },
+
+        searchEvents() {
+            // Debounce search
+        }
+    }
+}
+</script>
+{% endblock %}

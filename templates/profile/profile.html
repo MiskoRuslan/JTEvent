@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block title %}My Profile - JTEvent{% endblock %}
+{% block content %}
+<div x-data="profilePage()" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div x-show="loading" class="glass rounded-2xl p-8 animate-pulse">
+        <div class="flex items-center space-x-4 mb-6">
+            <div class="w-24 h-24 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+            <div class="flex-1">
+                <div class="bg-gray-300 dark:bg-gray-700 h-8 rounded mb-2"></div>
+                <div class="bg-gray-300 dark:bg-gray-700 h-4 rounded w-2/3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="!loading && profile" x-cloak>
+        <div class="glass rounded-2xl p-8 mb-6">
+            <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 mb-6">
+                <div class="relative">
+                    <img :src="profile.avatar || 'https://ui-avatars.com/api/?name=' + profile.first_name + '+' + profile.last_name + '&size=200'"
+                         class="w-24 h-24 rounded-full object-cover" alt="Profile">
+                    <button @click="$refs.avatarInput.click()"
+                            class="absolute bottom-0 right-0 p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                    <input type="file" x-ref="avatarInput" @change="uploadAvatar" accept="image/*" class="hidden">
+                </div>
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold mb-1" x-text="profile.full_name"></h1>
+                    <p class="text-gray-600 dark:text-gray-400" x-text="profile.email"></p>
+                </div>
+                <button @click="editMode = !editMode"
+                        class="px-6 py-3 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition">
+                    <span x-show="!editMode">Edit Profile</span>
+                    <span x-show="editMode">Cancel</span>
+                </button>
+            </div>
+
+            <div x-show="!editMode" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Username</label>
+                    <p class="text-lg" x-text="profile.username"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Bio</label>
+                    <p class="text-lg" x-text="profile.bio || 'No bio yet'"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Member Since</label>
+                    <p class="text-lg" x-text="formatDate(profile.date_joined)"></p>
+                </div>
+            </div>
+
+            <form x-show="editMode" @submit.prevent="updateProfile" class="space-y-4" x-cloak>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">First Name</label>
+                        <input type="text" x-model="form.first_name" required
+                               class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Last Name</label>
+                        <input type="text" x-model="form.last_name" required
+                               class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Username</label>
+                    <input type="text" x-model="form.username" required
+                           class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Bio</label>
+                    <textarea x-model="form.bio" rows="4" maxlength="500"
+                              class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none"></textarea>
+                    <p class="text-sm text-gray-500 mt-1" x-text="(form.bio?.length || 0) + '/500'"></p>
+                </div>
+                <button type="submit" :disabled="submitting"
+                        class="w-full px-6 py-3 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50">
+                    <span x-show="!submitting">Save Changes</span>
+                    <span x-show="submitting">Saving...</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="glass rounded-2xl p-8">
+            <h2 class="text-2xl font-bold mb-6">Change Password</h2>
+            <form @submit.prevent="changePassword" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Current Password</label>
+                    <input type="password" x-model="passwordForm.old_password" required
+                           class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">New Password</label>
+                    <input type="password" x-model="passwordForm.new_password" required minlength="8"
+                           class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Confirm New Password</label>
+                    <input type="password" x-model="passwordForm.confirm_password" required minlength="8"
+                           class="w-full px-4 py-3 glass rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                </div>
+                <button type="submit" :disabled="changingPassword"
+                        class="w-full px-6 py-3 gradient-bg text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50">
+                    <span x-show="!changingPassword">Change Password</span>
+                    <span x-show="changingPassword">Changing...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+function profilePage() {
+    return {
+        loading: true,
+        editMode: false,
+        submitting: false,
+        changingPassword: false,
+        profile: null,
+        form: {
+            first_name: '',
+            last_name: '',
+            username: '',
+            bio: ''
+        },
+        passwordForm: {
+            old_password: '',
+            new_password: '',
+            confirm_password: ''
+        },
+        async init() {
+            await this.loadProfile();
+        },
+        async loadProfile() {
+            try {
+                this.profile = await api.get('/auth/profile/');
+                this.form = {
+                    first_name: this.profile.first_name,
+                    last_name: this.profile.last_name,
+                    username: this.profile.username,
+                    bio: this.profile.bio || ''
+                };
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                showToast('Failed to load profile', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async updateProfile() {
+            this.submitting = true;
+            try {
+                const updated = await api.patch('/auth/profile/', this.form);
+                this.profile = updated;
+                Alpine.store('auth').setUser(updated);
+                showToast('Profile updated successfully', 'success');
+                this.editMode = false;
+            } catch (error) {
+                console.error('Failed to update profile:', error);
+                showToast('Failed to update profile', 'error');
+            } finally {
+                this.submitting = false;
+            }
+        },
+        async uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const updated = await api.patch('/auth/profile/', formData, true);
+                this.profile = updated;
+                Alpine.store('auth').setUser(updated);
+                showToast('Avatar updated successfully', 'success');
+            } catch (error) {
+                console.error('Failed to upload avatar:', error);
+                showToast('Failed to upload avatar', 'error');
+            }
+        },
+        async changePassword() {
+            if (this.passwordForm.new_password !== this.passwordForm.confirm_password) {
+                return showToast('Passwords do not match', 'error');
+            }
+
+            this.changingPassword = true;
+            try {
+                await api.post('/auth/change-password/', {
+                    old_password: this.passwordForm.old_password,
+                    new_password: this.passwordForm.new_password
+                });
+                showToast('Password changed successfully', 'success');
+                this.passwordForm = {
+                    old_password: '',
+                    new_password: '',
+                    confirm_password: ''
+                };
+            } catch (error) {
+                console.error('Failed to change password:', error);
+                showToast('Failed to change password', 'error');
+            } finally {
+                this.changingPassword = false;
+            }
+        },
+        formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

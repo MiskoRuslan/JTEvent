@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Cancelled</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #f85032 0%, #e73827 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .cancellation-badge {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .event-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #e73827;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .event-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .event-detail {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .event-detail-icon {
+            margin-right: 10px;
+            color: #e73827;
+        }
+        .apology-box {
+            background-color: #fff3cd;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❌ Event Cancelled</h1>
+        </div>
+
+        <div class="content">
+            <p>Hi <strong>{{ user.first_name }}</strong>,</p>
+
+            <div class="cancellation-badge">
+                🚫 This event has been cancelled
+            </div>
+
+            <p>We regret to inform you that the following event has been cancelled:</p>
+
+            <div class="event-card">
+                <div class="event-title">{{ event.title }}</div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">📅</span>
+                    <span>{{ event.date|date:"F d, Y" }} at {{ event.date|time:"g:i A" }}</span>
+                </div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">📍</span>
+                    <span>{{ event.location }}</span>
+                </div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">👤</span>
+                    <span>Organized by {{ event.organizer.get_full_name }}</span>
+                </div>
+            </div>
+
+            <div class="apology-box">
+                <strong>We sincerely apologize for any inconvenience this may cause.</strong>
+                <p style="margin-top: 10px;">
+                    The event organizer had to cancel due to unforeseen circumstances.
+                    Your registration has been automatically cancelled, and no further action is required from you.
+                </p>
+            </div>
+
+            <p><strong>What happens next?</strong></p>
+            <ul>
+                <li>Your registration has been cancelled</li>
+                <li>You can remove this event from your calendar</li>
+                <li>Check out other upcoming events on our platform</li>
+            </ul>
+
+            <a href="http://{{ site_url }}/api/events/" class="btn">Browse Other Events</a>
+
+            <p style="margin-top: 30px;">
+                If you have any questions, please contact the event organizer at
+                <a href="mailto:{{ event.organizer.email }}">{{ event.organizer.email }}</a>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated notification from Event Management System</p>
+            <p>Thank you for your understanding</p>
+        </div>
+    </div>
+</body>
+</html>
