@@ -60,6 +60,9 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+/media
+/staticfiles
+/static_root
 
 # Flask stuff:
 instance/
@@ -205,3 +208,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.idea
+.env.docker
+*.bat
+*.pyc
+media/
+staticfiles/
+.claude

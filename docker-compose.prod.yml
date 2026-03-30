@@ -1,0 +1,33 @@
+version: '3.9'
+
+# Production overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  web:
+    restart: always
+    volumes:
+      # Remove code sync volume for production
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=event_management.settings.production
+    command: gunicorn event_management.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level warning --access-logfile - --error-logfile -
+
+  celery:
+    restart: always
+    volumes:
+      # Remove code sync volume for production
+      - media_volume:/app/media
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=event_management.settings.production
+    command: celery -A event_management worker -l warning --concurrency=4
+
+  celery-beat:
+    restart: always
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=event_management.settings.production
+    command: celery -A event_management beat -l warning --scheduler django_celery_beat.schedulers:DatabaseScheduler

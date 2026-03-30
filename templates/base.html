@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" x-data="{ darkMode: localStorage.getItem('theme') !== 'light' }"
+      :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JTEvent - Join To Event{% endblock %}</title>
+
+    <!-- Dark theme by default - prevents flash of white background -->
+    <script>
+        // This runs BEFORE page render to prevent flash
+        if (localStorage.getItem('theme') !== 'light') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dark .glass {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Calendar icon styling for dark mode */
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.5);
+            cursor: pointer;
+        }
+
+        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.5) sepia(0.5) hue-rotate(220deg) saturate(2);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">J</span>
+                        </div>
+                        <span class="text-xl font-bold gradient-text">JTEvent</span>
+                    </a>
+
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/" class="hover:text-primary-600 transition">Home</a>
+                        <a href="/events" class="hover:text-primary-600 transition">Events</a>
+                        <a href="/events/create" class="hover:text-primary-600 transition" x-show="$store.auth.isAuthenticated">Create Event</a>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button @click="darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light')"
+                            class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+
+                    <div x-show="!$store.auth.isAuthenticated" class="flex space-x-2">
+                        <a href="/login" class="px-4 py-2 text-sm font-medium hover:text-primary-600 transition">Login</a>
+                        <a href="/register" class="px-4 py-2 text-sm font-medium text-white gradient-bg rounded-lg hover:opacity-90 transition">Sign Up</a>
+                    </div>
+
+                    <div x-show="$store.auth.isAuthenticated" x-cloak class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <img :src="$store.auth.user?.avatar || 'https://ui-avatars.com/api/?name=' + ($store.auth.user?.first_name || 'User')"
+                                 class="w-8 h-8 rounded-full" alt="Avatar">
+                            <span x-text="$store.auth.user?.first_name" class="hidden md:block"></span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             class="absolute right-0 mt-2 w-48 glass rounded-lg shadow-lg py-1 z-50">
+                            <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Dashboard</a>
+                            <a href="/profile" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition">Profile</a>
+                            <button @click="$store.auth.logout()" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-red-600">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold gradient-text mb-4">JTEvent</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Join To Event - Discover and manage amazing events</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Platform</h4>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li><a href="/events" class="hover:text-primary-600">Browse Events</a></li>
+                        <li><a href="/events/create" class="hover:text-primary-600">Create Event</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Account</h4>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li><a href="/login" class="hover:text-primary-600">Login</a></li>
+                        <li><a href="/register" class="hover:text-primary-600">Register</a></li>
+                        <li><a href="/dashboard" class="hover:text-primary-600">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Documentation</h4>
+                    <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                        <li><a href="/api/schema/swagger-ui/" class="hover:text-primary-600">API Docs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center text-gray-600 dark:text-gray-400">
+                <p>&copy; © 2026 LabZap Sole Proprietor Misko Ruslan Vasylovych · TIN 10000002870111 Rivne Oblast, Ukraine.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

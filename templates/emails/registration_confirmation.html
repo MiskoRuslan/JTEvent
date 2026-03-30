@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmed</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .event-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .event-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .event-detail {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .event-detail-icon {
+            margin-right: 10px;
+            color: #667eea;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Реєстрацію підтверджено!</h1>
+        </div>
+
+        <div class="content">
+            <p>Привіт, <strong>{{ user.first_name }}</strong>!</p>
+
+            <p>Дякуємо за реєстрацію! Ми раді підтвердити вашу участь у події:</p>
+
+            <div class="event-card">
+                <div class="event-title">{{ event.title }}</div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">📅</span>
+                    <span>{{ event.date|date:"d F Y" }} о {{ event.date|time:"H:i" }}</span>
+                </div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">📍</span>
+                    <span>{{ event.location }}</span>
+                </div>
+
+                <div class="event-detail">
+                    <span class="event-detail-icon">👤</span>
+                    <span>Організатор: {{ event.organizer.get_full_name }}</span>
+                </div>
+
+                {% if event.description %}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                    <strong>Про цю подію:</strong>
+                    <p style="margin-top: 10px;">{{ event.description|truncatewords:50 }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <p><strong>Що далі?</strong></p>
+            <ul>
+                <li>Додайте подію до свого календаря (прикріплений .ics файл)</li>
+                <li>Ми надішлемо вам нагадування за 24 години до початку події</li>
+                <li>Якщо щось зміниться, ми повідомимо вас</li>
+            </ul>
+
+            <a href="http://{{ site_url }}/api/events/{{ event.id }}/" class="btn">Переглянути деталі події</a>
+        </div>
+
+        <div class="footer">
+            <p>Це автоматичне повідомлення від JTEvent (Join To Event)</p>
+            <p>Якщо у вас виникли запитання, будь ласка, зв'яжіться з організатором події</p>
+        </div>
+    </div>
+</body>
+</html>
